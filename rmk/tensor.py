@@ -80,6 +80,38 @@ class Tensor:
     def __rsub__(self, other):
         return Tensor(other) - self
 
+    def exp(self):
+        out = Tensor(xp.exp(self.data), (self,), "exp")
+
+        def _backward():
+            # d(exp(x))/dx = exp(x) = out.data
+            self.grad += out.data * out.grad
+
+        out._backward = _backward
+        return out
+
+    def log(self):
+        out = Tensor(xp.log(self.data), (self,), "log")
+
+        def _backward():
+            # d(log(x))/dx = 1/x
+            self.grad += out.grad / self.data
+
+        out._backward = _backward
+        return out
+
+    def __pow__(self, p):
+        if isinstance(p, Tensor):
+            raise TypeError("Tensor ** Tensor not supported; exponent must be a number.")
+        out = Tensor(self.data ** p, (self,), f"**{p}")
+
+        def _backward():
+            # d(x**p)/dx = p * x**(p-1)
+            self.grad += p * self.data ** (p - 1) * out.grad
+
+        out._backward = _backward
+        return out
+
     def sum(self, axis=None, keepdims=False):
         out = Tensor(self.data.sum(axis=axis, keepdims=keepdims), (self,), "sum")
 
