@@ -21,6 +21,35 @@ def gelu(x):
     return out
 
 
+def softmax(x, axis=-1):
+    """Numerically stable softmax along `axis`. Backward is the JVP of the softmax Jacobian."""
+    shifted = x.data - x.data.max(axis=axis, keepdims=True)
+    exp_x = xp.exp(shifted)
+    p = exp_x / exp_x.sum(axis=axis, keepdims=True)
+    out = Tensor(p, (x,), "softmax")
+
+    def _backward():
+        g = out.grad
+        # dL/dx = p * (g - sum(g*p, axis, keepdims))  -- the JVP collapse
+        x.grad += p * (g - (g * p).sum(axis=axis, keepdims=True))
+
+    out._backward = _backward
+    return out
+
+
+def embedding(weight, ids):
+    """Row-lookup: out[k] = weight[ids[k]]. Backward is a scatter-add."""
+    out = Tensor(weight.data[ids], (weight,), "embedding")
+
+    def _backward():
+        # xp.add.at is the unbuffered scatter-add; it accumulates on duplicate ids.
+        # naive weight.grad[ids] += out.grad would keep only one of duplicate writes.
+        xp.add.at(weight.grad, ids, out.grad)
+
+    out._backward = _backward
+    return out
+
+
 def layer_norm(x, gamma, beta, eps=1e-5):
     """LayerNorm over the last axis. x, gamma, beta are Tensors; gamma/beta shape (D,)."""
     xd = x.data
