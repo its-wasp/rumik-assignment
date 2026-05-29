@@ -20,7 +20,8 @@ class Module:
         object.__setattr__(self, name, value)
 
     def parameters(self):
-        # dedup by id() so weight-tied tensors aren't stepped on twice
+        # dedup by id() so weight-tied tensors aren't stepped on twice relevant to LLMs initial embedding layer and 
+        # at last vocab projection (transposing the same embedding layer weights) -> shared memory
         seen, out = set(), []
 
         def walk(m):
@@ -48,6 +49,7 @@ class Module:
         return self.train(False)
 
     def state_dict(self, prefix=""):
+        # p.data.copy() because if we don't do that we are going to just update the references.
         sd = {prefix + n: p.data.copy() for n, p in self._params.items()}
         for n, m in self._modules.items():
             sd.update(m.state_dict(prefix + n + "."))
@@ -57,7 +59,8 @@ class Module:
         for n, p in self._params.items():
             key = prefix + n
             if key in sd:
-                p.data[...] = sd[key] # changing the values inplace without changing the pointer.
+                # changing the values inplace without changing the pointer.
+                p.data[...] = sd[key]
         for n, m in self._modules.items():
             m.load_state_dict(sd, prefix + n + ".")
 
@@ -96,7 +99,6 @@ class Embedding(Module):
 class LayerNorm(Module):
     def __init__(self, features, eps=1e-5):
         super().__init__()
-        # naming `weight`/`bias` (not `gamma`/`beta`) matches PyTorch's state-dict convention
         self.weight = Tensor(xp.ones(features))
         self.bias = Tensor(xp.zeros(features))
         self.eps = eps
@@ -110,6 +112,7 @@ class Dropout(Module):
         super().__init__()
         self.p = p
 
+    # inverted dropout method
     def forward(self, x):
         if not self.training or self.p == 0.0:
             return x
