@@ -131,8 +131,12 @@ class Tensor:
         out = Tensor(self.data @ other.data, (self, other), "@")
 
         def _backward():
-            self.grad += out.grad @ xp.swapaxes(other.data, -1, -2)
-            other.grad += xp.swapaxes(self.data, -1, -2) @ out.grad
+            # forward broadcasts leading batch dims when operands differ; the
+            # backward must unbroadcast each grad back to its operand's shape.
+            sg = out.grad @ xp.swapaxes(other.data, -1, -2)
+            og = xp.swapaxes(self.data, -1, -2) @ out.grad
+            self.grad += _unbroadcast(sg, self.data.shape)
+            other.grad += _unbroadcast(og, other.data.shape)
 
         out._backward = _backward
         return out
