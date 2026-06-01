@@ -71,6 +71,27 @@ class Module:
         return self.forward(*args, **kwargs)
 
 
+class ModuleList(Module):
+    """List-like container that registers its children as submodules, so that gradients can be tracked"""
+
+    def __init__(self, modules):
+        super().__init__()
+        self._list = []
+        for i, m in enumerate(modules):
+            assert isinstance(m, Module)
+            self._modules[str(i)] = m
+            self._list.append(m)
+
+    def __iter__(self):
+        return iter(self._list)
+
+    def __getitem__(self, i):
+        return self._list[i]
+
+    def __len__(self):
+        return len(self._list)
+
+
 class Linear(Module):
     def __init__(self, in_features, out_features, bias=True):
         super().__init__()
