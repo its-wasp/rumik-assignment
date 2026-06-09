@@ -200,3 +200,8 @@ class Tensor:
         self.grad = xp.ones_like(self.data)
         for v in reversed(topo):
             v._backward()
+        
+        # manually breaking the reference cycle (otherwise OOM)
+        for v in topo:
+            v._backward = lambda: None
+            v._parents = ()
