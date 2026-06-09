@@ -1,8 +1,11 @@
 """Train a small GPT on TinyShakespeare and produce loss curves + sample text."""
 
+import argparse
+import datetime
 import json
 import os
 import sys
+from dataclasses import asdict
 
 import numpy as np
 import tiktoken
@@ -65,12 +68,19 @@ def plot_metrics(metrics, out_dir):
 
 
 def main():
-
-    import argparse
     ap = argparse.ArgumentParser()
     ap.add_argument("--max-steps", type=int, default=2000, help="total training steps")
+    ap.add_argument(
+        "--name",
+        type=str,
+        default=None,
+        help="run subdirectory under runs/shakespeare/ (defaults to YYYYMMDD-HHMMSS)",
+    )
     args = ap.parse_args()
-    cfg = TrainConfig(max_steps=args.max_steps)
+
+    run_name = args.name or datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    out_dir = os.path.join("runs", "shakespeare", run_name)
+    cfg = TrainConfig(max_steps=args.max_steps, out_dir=out_dir)
 
     np.random.seed(cfg.seed)
     rng_train = np.random.default_rng(cfg.seed)
@@ -86,11 +96,17 @@ def main():
     )
     model = GPT(model_cfg)
     n_params = sum(p.data.size for p in model.parameters())
+    print(f"run name: {run_name}  ->  {out_dir}/")
     print(f"model: {n_params:,} params ({n_params/1e6:.2f}M)")
 
     optimizer = AdamW(
         model.parameters(), lr=cfg.max_lr, weight_decay=cfg.weight_decay
     )
+
+    # persist the full hyperparameter spec next to the artifacts
+    os.makedirs(cfg.out_dir, exist_ok=True)
+    with open(os.path.join(cfg.out_dir, "config.json"), "w") as f:
+        json.dump({"model": asdict(model_cfg), "train": asdict(cfg)}, f, indent=2)
 
     get_train_batch = make_batch_fn("train", cfg, rng_train)
     get_val_batch = make_batch_fn("val", cfg, rng_val)
