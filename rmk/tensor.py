@@ -14,6 +14,7 @@ fires.
 Scalars are represented as 0-d ndarrays so the code path is uniform.
 """
 
+from rmk import backend
 from rmk.backend import xp
 
 
@@ -29,7 +30,9 @@ def _unbroadcast(grad, shape):
 
 class Tensor:
     def __init__(self, data, _parents=(), _op=""):
-        self.data = xp.asarray(data, dtype=xp.float64)
+        # backend.DTYPE is read at construction time so training scripts can
+        # override it (to fp32) before any Tensor is built
+        self.data = xp.asarray(data, dtype=backend.DTYPE)
         self.grad = xp.zeros_like(self.data)
         self._parents = _parents
         self._op = _op

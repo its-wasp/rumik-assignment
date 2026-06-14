@@ -15,7 +15,7 @@ from datasets import load_dataset
 from tqdm import tqdm
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data", "openwebtext")
-TARGET_TOKENS = 500_000_000  # ~500M tokens; tune for the actual training run
+TARGET_TOKENS = 100_000_000  # ~100M tokens; sized for an ~12M-param overnight run on 4050
 VAL_FRACTION = 0.005  # ~0.5% held out for validation
 
 
@@ -24,7 +24,8 @@ def main():
     enc = tiktoken.get_encoding("gpt2")
     eot = enc.eot_token
 
-    dataset = load_dataset("openwebtext", split="train", streaming=True)
+    # bare "openwebtext" is no longer a valid HF dataset id; use the standard namespaced fork
+    dataset = load_dataset("Skylion007/openwebtext", split="train", streaming=True, trust_remote_code=True)
 
     all_tokens = []
     pbar = tqdm(total=TARGET_TOKENS, unit="tok", unit_scale=True, desc="tokenizing OWT")

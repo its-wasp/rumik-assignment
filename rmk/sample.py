@@ -32,7 +32,9 @@ def generate(model, idx, max_new_tokens, temperature=1.0, top_k=None):
         # numerically stable softmax
         shifted = logits - logits.max(axis=-1, keepdims=True)
         probs = xp.exp(shifted) / xp.exp(shifted).sum(axis=-1, keepdims=True)
-        probs_np = np.asarray(probs)  # numpy.random.choice expects numpy
+        # numpy.random.choice expects numpy. CuPy arrays need explicit .get()
+        # for device->host transfer; numpy arrays pass through asarray.
+        probs_np = probs.get() if hasattr(probs, "get") else np.asarray(probs)
 
         next_tokens = np.array(
             [np.random.choice(probs_np.shape[-1], p=probs_np[b]) for b in range(probs_np.shape[0])],

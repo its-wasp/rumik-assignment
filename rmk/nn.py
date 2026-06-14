@@ -60,7 +60,9 @@ class Module:
             key = prefix + n
             if key in sd:
                 # changing the values inplace without changing the pointer.
-                p.data[...] = sd[key]
+                # xp.asarray() handles the numpy->cupy host-to-device copy when
+                # loading a checkpoint on the GPU backend (no-op on numpy)
+                p.data[...] = xp.asarray(sd[key])
         for n, m in self._modules.items():
             m.load_state_dict(sd, prefix + n + ".")
 
