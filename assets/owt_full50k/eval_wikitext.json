@@ -1,0 +1,10 @@
+{
+  "ckpt": "runs/owt/full50k/ckpt_step40000.npz",
+  "step": 40000,
+  "dataset": "wikitext",
+  "n_tokens": 247289,
+  "block_size": 256,
+  "stride": 256,
+  "val_loss": 7.03835292628392,
+  "ppl_bpe": 1139.5092044603027
+}

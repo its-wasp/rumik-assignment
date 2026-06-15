@@ -1,0 +1,27 @@
+{
+  "model": {
+    "block_size": 256,
+    "vocab_size": 50257,
+    "n_layer": 6,
+    "n_head": 6,
+    "n_embd": 192,
+    "dropout": 0.0
+  },
+  "train": {
+    "data_dir": "data/openwebtext",
+    "block_size": 256,
+    "batch_size": 4,
+    "max_lr": 0.0006,
+    "min_lr": 6e-05,
+    "warmup_steps": 200,
+    "max_steps": 50000,
+    "weight_decay": 0.1,
+    "grad_clip": 1.0,
+    "eval_interval": 500,
+    "eval_iters": 20,
+    "log_interval": 10,
+    "checkpoint_interval": 2000,
+    "out_dir": "runs\\owt\\full50k",
+    "seed": 0
+  }
+}

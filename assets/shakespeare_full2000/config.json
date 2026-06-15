@@ -1,0 +1,27 @@
+{
+  "model": {
+    "block_size": 128,
+    "vocab_size": 50257,
+    "n_layer": 4,
+    "n_head": 4,
+    "n_embd": 128,
+    "dropout": 0.1
+  },
+  "train": {
+    "data_dir": "data/shakespeare",
+    "block_size": 128,
+    "batch_size": 4,
+    "max_lr": 0.0003,
+    "min_lr": 3e-05,
+    "warmup_steps": 100,
+    "max_steps": 2000,
+    "weight_decay": 0.1,
+    "grad_clip": 1.0,
+    "eval_interval": 200,
+    "eval_iters": 20,
+    "log_interval": 10,
+    "checkpoint_interval": 500,
+    "out_dir": "runs\\shakespeare\\full2000_on_cpu",
+    "seed": 0
+  }
+}

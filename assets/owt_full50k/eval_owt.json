@@ -1,0 +1,10 @@
+{
+  "ckpt": "runs/owt/full50k/ckpt_step40000.npz",
+  "step": 40000,
+  "dataset": "owt",
+  "n_tokens": 500009,
+  "block_size": 256,
+  "stride": 256,
+  "val_loss": 5.55439616153012,
+  "ppl_bpe": 258.3709031165765
+}
